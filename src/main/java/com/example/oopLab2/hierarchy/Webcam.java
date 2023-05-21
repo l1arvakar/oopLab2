@@ -4,8 +4,9 @@ import com.example.oopLab2.annotation.Name;
 import com.example.oopLab2.annotation.Type;
 
 public class Webcam extends InputDevice {
+    @Type("Integer")
     public int frameRate;
-
+    @Type("Double")
     public double matrixResolution;
 
     public Webcam(String brand, int price, String connectionType, InputInformationType type, int frameRate, double matrixResolution) {

@@ -4,10 +4,13 @@ import com.example.oopLab2.annotation.Name;
 import com.example.oopLab2.annotation.Type;
 
 public abstract class PCComponent {
+    @Type("String")
     public String brand;
 
+    @Type("Integer")
     public int price;
 
+    @Type("String")
     public String connectionType;
 
     public PCComponent(String brand, int price, String connectionType) {

@@ -4,8 +4,10 @@ import com.example.oopLab2.annotation.Name;
 import com.example.oopLab2.annotation.Type;
 
 public class GraphicsCard extends SystemBlockDevice {
+    @Type("Integer")
     public int gpuMemorySize;
 
+    @Type("String")
     public String coolingSystem;
 
     public GraphicsCard (String brand, int price, String connectionType, int height, int length, int width, int gpuMemorySize, String coolingSystem) {

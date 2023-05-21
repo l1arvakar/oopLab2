@@ -4,10 +4,13 @@ import com.example.oopLab2.annotation.Name;
 import com.example.oopLab2.annotation.Type;
 
 public abstract class SystemBlockDevice extends PCComponent {
+    @Type("Integer")
     public int height;
 
+    @Type("Integer")
     public int length;
 
+    @Type("Integer")
     public int width;
 
     public SystemBlockDevice(String brand, int price, String connectionType, int height, int length, int width) {

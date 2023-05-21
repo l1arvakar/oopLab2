@@ -2,8 +2,9 @@ package com.example.oopLab2;
 
 import com.example.oopLab2.factories.*;
 import com.example.oopLab2.hierarchy.*;
-import com.example.oopLab2.tools.TableObject;
 import com.example.oopLab2.tools.GUI;
+import com.example.oopLab2.tools.Maps;
+import com.example.oopLab2.tools.TableObject;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -94,9 +95,10 @@ public class HelloController {
             factory.fillInputs(components.get(selectedRow.getIndex() - 1), getLabels());
         } else {
             if (factory.checkInputs()) {
+                PCComponent temp = components.get(selectedRow.getIndex() - 1);
                 components.set(selectedRow.getIndex() - 1, factory.getComponent());
                 tableObjects.set(selectedRow.getIndex() - 1, new TableObject(selectedRow.getIndex(), ClassChoice.getValue(), factory.getComponent().getBrand(), factory.getComponent().getPrice(), factory.getComponent().getConnectionType()));
-                GUI.clearInputs(inputs, labels);
+                GUI.clearInputs(inputs, labels, Maps.getMapOfTypes(temp.getClass()), temp.getClass());
                 selectedRow = null;
                 DeleteBtn.setDisable(true);
                 UpdateBtn.setDisable(true);
@@ -168,7 +170,7 @@ public class HelloController {
 
             components.add(mainFactory.getComponent());
             tableObjects.add(new TableObject(components.size(), ClassChoice.getValue(), components.get(components.size() - 1).getBrand(), components.get(components.size() - 1).getPrice(), components.get(components.size() - 1).getConnectionType()));
-            GUI.clearInputs(mainFactory.getInputs(), getLabels());
+            GUI.clearInputs(mainFactory.getInputs(), getLabels(), Maps.getMapOfTypes(mainFactory.getComponent().getClass()), mainFactory.getComponent().getClass());
             InputsVBox.setSpacing(5);
         } else {
             InputsVBox.setSpacing(3);
@@ -185,7 +187,7 @@ public class HelloController {
     }
 
     private void initGUI() {
-        ClassChoice.getItems().addAll("CPU", "Graphics card", "Headphones", "Monitor", "Webcam");
+        ClassChoice.getItems().addAll(mapOfFactories.keySet());
         ClassChoice.setOnAction(this::onClassChoice);
         ClassChoice.setValue("Webcam");
 

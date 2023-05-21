@@ -51,7 +51,7 @@ public class GraphicsCardFactory implements MainFactory {
 
     @Override
     public void createInputs(HBox container) {
-        inputs = GUI.createLabelsAndInputs(container, labels);
+        inputs = GUI.createLabelsAndInputs(container, labels, Maps.getMapOfTypes(GraphicsCard.class), GraphicsCard.class);
     }
 
     @Override

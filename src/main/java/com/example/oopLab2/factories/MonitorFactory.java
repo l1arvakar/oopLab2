@@ -51,7 +51,7 @@ public class MonitorFactory implements MainFactory {
 
     @Override
     public void createInputs(HBox container) {
-        inputs = GUI.createLabelsAndInputs(container, labels);
+        inputs = GUI.createLabelsAndInputs(container, labels, Maps.getMapOfTypes(Monitor.class), Monitor.class);
     }
 
     @Override

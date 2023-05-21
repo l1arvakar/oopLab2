@@ -4,7 +4,7 @@ import com.example.oopLab2.annotation.Name;
 import com.example.oopLab2.annotation.Type;
 
 public abstract class OutputDevice extends PCComponent {
-
+    @Type("Enum")
     public OutputInformationType type;
 
     public OutputDevice(String brand, int price, String connectionType, OutputInformationType type) {

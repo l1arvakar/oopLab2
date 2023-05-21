@@ -1,8 +1,7 @@
 package com.example.oopLab2.factories;
 
 import com.example.oopLab2.annotation.Name;
-import com.example.oopLab2.hierarchy.InputInformationType;
-import com.example.oopLab2.hierarchy.OutputInformationType;
+import com.example.oopLab2.annotation.Type;
 import com.example.oopLab2.hierarchy.PCComponent;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Control;
@@ -33,16 +32,37 @@ public interface MainFactory {
                         mapOfSetters.get(labelTexts.get(i)).invoke(instance, Double.parseDouble(((TextField) inputs.get(i)).getText()));
                         break;
                     case "Enum":
-                        if (labelTexts.get(i).startsWith("Input")) {
-                            mapOfSetters.get(labelTexts.get(i)).invoke(instance, getEnumByAnnotationValue(InputInformationType.class, (String) ((ComboBox<?>) inputs.get(i)).getValue()));
-                        } else {
-                            mapOfSetters.get(labelTexts.get(i)).invoke(instance, getEnumByAnnotationValue(OutputInformationType.class, (String) ((ComboBox<?>) inputs.get(i)).getValue()));
-                        }
+                        Class<? extends Enum> enumClass = getEnumClass(instance.getClass());
+                        mapOfSetters.get(labelTexts.get(i)).invoke(instance, getEnumByAnnotationValue(enumClass, (String) ((ComboBox<?>) inputs.get(i)).getValue()));
+
                 }
             } catch (InvocationTargetException | IllegalAccessException e) {
                 throw new RuntimeException(e);
 
             }
+        }
+    }
+
+    private static Class getEnumClass(Class thisClass) {
+
+        Field[] fields = thisClass.getFields();
+        Field enumField = null;
+        for (Field field : fields) {
+            Annotation[] annotations = field.getDeclaredAnnotations();
+            for (Annotation annotation : annotations) {
+                if (annotation instanceof Type) {
+                    Type typeAnnotation = (Type) annotation;
+
+                    if ("Enum".equals(typeAnnotation.value())) {
+                        enumField = field;
+                    }
+                }
+            }
+        }
+        if (enumField != null) {
+            return enumField.getType();
+        } else {
+            return null;
         }
     }
 

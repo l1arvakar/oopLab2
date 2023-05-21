@@ -5,8 +5,10 @@ import com.example.oopLab2.annotation.Type;
 
 public class CPU extends SystemBlockDevice {
 
+    @Type("Integer")
     public int numberOfCores;
 
+    @Type("Double")
     public double clockSpeed;
 
 

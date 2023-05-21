@@ -51,7 +51,7 @@ public class WebcamFactory implements MainFactory {
 
     @Override
     public void createInputs(HBox container) {
-        inputs = GUI.createLabelsAndInputs(container, labels);
+        inputs = GUI.createLabelsAndInputs(container, labels, Maps.getMapOfTypes(Webcam.class), Webcam.class);
     }
 
     @Override

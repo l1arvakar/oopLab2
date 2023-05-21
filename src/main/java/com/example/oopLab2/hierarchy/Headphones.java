@@ -4,6 +4,7 @@ import com.example.oopLab2.annotation.Name;
 import com.example.oopLab2.annotation.Type;
 
 public class Headphones extends OutputDevice {
+    @Type("Integer")
     public int maxVolume;
 
     public Headphones(String brand, int price, String connectionType, OutputInformationType type, int maxVolume) {

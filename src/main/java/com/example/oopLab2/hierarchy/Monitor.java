@@ -4,8 +4,10 @@ import com.example.oopLab2.annotation.Name;
 import com.example.oopLab2.annotation.Type;
 
 public class Monitor extends OutputDevice {
+    @Type("Double")
     public double screenSize;
 
+    @Type("Integer")
     public int brightness;
 
     public Monitor(String brand, int price, String connectionType, OutputInformationType type, double screenSize, int brightness) {
