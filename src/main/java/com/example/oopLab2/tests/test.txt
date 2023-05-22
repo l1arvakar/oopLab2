@@ -1,0 +1,1 @@
+Class:CPU;Clock speed:2.9;Brand:Intel;Length:4;Price($):400;Connection type:LGA1200;Height:4;Number of cores:6;Width:1;
