@@ -1,10 +1,16 @@
 package com.example.oopLab2;
 
 import com.example.oopLab2.factories.*;
+import com.example.oopLab2.factories.serializers.BinarySerializerFactory;
+import com.example.oopLab2.factories.serializers.JSONSerializerFactory;
+import com.example.oopLab2.factories.serializers.SerializerFactory;
+import com.example.oopLab2.factories.serializers.TextSerializerFactory;
 import com.example.oopLab2.hierarchy.*;
+import com.example.oopLab2.tools.FileChooser;
 import com.example.oopLab2.tools.GUI;
 import com.example.oopLab2.tools.Maps;
 import com.example.oopLab2.tools.TableObject;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -16,6 +22,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Optional;
@@ -24,11 +31,15 @@ public class HelloController {
 
     private final HashMap<String, MainFactory> mapOfFactories = new HashMap<>();
     private final ObservableList<com.example.oopLab2.tools.TableObject> tableObjects = FXCollections.observableArrayList();
-    private final ArrayList<PCComponent> components = new ArrayList<>();
+    private ArrayList<PCComponent> components = new ArrayList<>();
+
+    private final HashMap<String, SerializerFactory> mapOfSerializers = new HashMap<>();
 
     private ArrayList<Control> inputs;
     private TableObject selectedRow;
     private boolean isUpdated = false;
+
+    private File selectedFile;
 
     @FXML
     private TableColumn<TableObject, Integer> IdColumn;
@@ -83,7 +94,7 @@ public class HelloController {
     }
 
     @FXML
-    void onUpdateBtnClick(ActionEvent event) {
+    void onUpdateBtnClick() {
         if (!isUpdated) {
             ClassChoice.setValue(selectedRow.getType());
         }
@@ -120,7 +131,7 @@ public class HelloController {
     }
 
     @FXML
-    void onDeleteBtnClick(ActionEvent event) {
+    void onDeleteBtnClick() {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Delete object");
         alert.setHeaderText("Are you sure you want to delete the selected object?");
@@ -149,8 +160,15 @@ public class HelloController {
     @FXML
     public void initialize() {
         initFactories();
+        initSerializers();
         initGUI();
         initObjects();
+    }
+
+    private void initSerializers() {
+        mapOfSerializers.put("bin", new BinarySerializerFactory());
+        mapOfSerializers.put("json", new JSONSerializerFactory());
+        mapOfSerializers.put("txt", new TextSerializerFactory());
     }
 
 
@@ -164,7 +182,7 @@ public class HelloController {
         }
     }
 
-    public void onAddBtnClick(ActionEvent event) {
+    public void onAddBtnClick() {
         MainFactory mainFactory = mapOfFactories.get(ClassChoice.getValue());
         if (mainFactory.checkInputs()) {
 
@@ -215,5 +233,45 @@ public class HelloController {
         mapOfFactories.put("Headphones", new HeadphonesFactory());
         mapOfFactories.put("Monitor", new MonitorFactory());
         mapOfFactories.put("Webcam", new WebcamFactory());
+    }
+
+    public void onMenuClick() {
+        selectedRow = null;
+        UpdateBtn.setDisable(true);
+        DeleteBtn.setDisable(true);
+    }
+
+    public void onFileOpenClick() throws JsonProcessingException {
+        deserialize();
+    }
+
+    private void deserialize() throws JsonProcessingException {
+        selectedFile = FileChooser.getOpenFile();
+        if (selectedFile != null) {
+            String ext = getExtension(selectedFile.getPath());
+            components = mapOfSerializers.get(ext).getSerializer().deserialize(selectedFile.getPath());
+
+            tableObjects.clear();
+            for (int i = 0; i < components.size(); i++) {
+                tableObjects.add(new TableObject(i + 1, components.get(i).getClass().getSimpleName(), components.get(i).getBrand(), components.get(i).getPrice(), components.get(i).getConnectionType()));
+            }
+        }
+    }
+
+    private String getExtension(String path) {
+        String[] parts = path.split("\\.");
+        return parts[parts.length - 1];
+    }
+
+    public void onFileSaveClick() {
+        serialize();
+    }
+
+    private void serialize() {
+        selectedFile = FileChooser.getSaveFile();
+        if (selectedFile != null) {
+            String ext = getExtension(selectedFile.getPath());
+            mapOfSerializers.get(ext).getSerializer().serialize(components, selectedFile.getPath());
+        }
     }
 }

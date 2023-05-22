@@ -3,7 +3,9 @@ package com.example.oopLab2.hierarchy;
 import com.example.oopLab2.annotation.Name;
 import com.example.oopLab2.annotation.Type;
 
-public abstract class OutputDevice extends PCComponent {
+import java.io.Serializable;
+
+public abstract class OutputDevice extends PCComponent implements Serializable {
     @Type("Enum")
     public OutputInformationType type;
 

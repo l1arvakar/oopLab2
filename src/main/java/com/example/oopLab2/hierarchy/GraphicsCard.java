@@ -3,7 +3,9 @@ package com.example.oopLab2.hierarchy;
 import com.example.oopLab2.annotation.Name;
 import com.example.oopLab2.annotation.Type;
 
-public class GraphicsCard extends SystemBlockDevice {
+import java.io.Serializable;
+
+public class GraphicsCard extends SystemBlockDevice implements Serializable {
     @Type("Integer")
     public int gpuMemorySize;
 

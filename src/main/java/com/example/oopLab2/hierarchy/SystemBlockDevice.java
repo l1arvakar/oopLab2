@@ -3,7 +3,9 @@ package com.example.oopLab2.hierarchy;
 import com.example.oopLab2.annotation.Name;
 import com.example.oopLab2.annotation.Type;
 
-public abstract class SystemBlockDevice extends PCComponent {
+import java.io.Serializable;
+
+public abstract class SystemBlockDevice extends PCComponent implements Serializable {
     @Type("Integer")
     public int height;
 

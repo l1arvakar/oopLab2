@@ -8,5 +8,5 @@ public enum InputInformationType {
     @Name("Audio")
     AudioInfo,
     @Name("Coordinate")
-    CoordinateInfo;
+    CoordinateInfo
 }

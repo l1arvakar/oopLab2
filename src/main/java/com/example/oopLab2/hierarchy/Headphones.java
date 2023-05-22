@@ -3,7 +3,9 @@ package com.example.oopLab2.hierarchy;
 import com.example.oopLab2.annotation.Name;
 import com.example.oopLab2.annotation.Type;
 
-public class Headphones extends OutputDevice {
+import java.io.Serializable;
+
+public class Headphones extends OutputDevice implements Serializable {
     @Type("Integer")
     public int maxVolume;
 

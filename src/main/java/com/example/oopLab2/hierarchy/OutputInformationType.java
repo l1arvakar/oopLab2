@@ -6,5 +6,5 @@ public enum OutputInformationType {
     @Name("Graphic")
     GraphicInfo,
     @Name("Audio")
-    AudioInfo;
+    AudioInfo
 }

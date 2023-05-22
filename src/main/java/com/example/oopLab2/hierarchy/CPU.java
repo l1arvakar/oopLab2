@@ -3,7 +3,9 @@ package com.example.oopLab2.hierarchy;
 import com.example.oopLab2.annotation.Name;
 import com.example.oopLab2.annotation.Type;
 
-public class CPU extends SystemBlockDevice {
+import java.io.Serializable;
+
+public class CPU extends SystemBlockDevice implements Serializable {
 
     @Type("Integer")
     public int numberOfCores;
