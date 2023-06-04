@@ -39,7 +39,7 @@ public class CPUFactory implements MainFactory{
     @Override
     public PCComponent getComponent() {
         CPU cpu = new CPU();
-        HashMap<String,String> typesMap = Maps.getMapOfTypes(CPU.class);
+        HashMap<String,Class<?>> typesMap = Maps.getMapOfTypes(CPU.class);
         HashMap<String,Method> settersMap = Maps.getMapOfSettersOrGetters("set", CPU.class);
         createInstance(labels, inputs, settersMap, typesMap, cpu);
         return cpu;

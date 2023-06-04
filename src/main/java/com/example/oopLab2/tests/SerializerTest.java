@@ -3,14 +3,13 @@ package com.example.oopLab2.tests;
 import com.example.oopLab2.hierarchy.*;
 import com.example.oopLab2.serialize.serializers.TextSerializer;
 import com.example.oopLab2.tools.Maps;
-import org.junit.Test;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static org.junit.Assert.assertEquals;
+
 
 public class SerializerTest {
     private ArrayList<PCComponent> testComponents = new ArrayList<>();

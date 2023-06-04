@@ -38,7 +38,7 @@ public class WebcamFactory implements MainFactory {
     @Override
     public PCComponent getComponent() {
         Webcam webcam = new Webcam();
-        HashMap<String,String> typesMap = Maps.getMapOfTypes(Webcam.class);
+        HashMap<String,Class<?>> typesMap = Maps.getMapOfTypes(Webcam.class);
         HashMap<String,Method> settersMap = Maps.getMapOfSettersOrGetters("set", Webcam.class);
         createInstance(labels, inputs, settersMap, typesMap, webcam);
         return webcam;

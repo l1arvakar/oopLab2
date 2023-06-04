@@ -38,7 +38,7 @@ public class GraphicsCardFactory implements MainFactory {
     @Override
     public PCComponent getComponent() {
         GraphicsCard graphicsCard = new GraphicsCard();
-        HashMap<String,String> typesMap = Maps.getMapOfTypes(GraphicsCard.class);
+        HashMap<String,Class<?>> typesMap = Maps.getMapOfTypes(GraphicsCard.class);
         HashMap<String,Method> settersMap = Maps.getMapOfSettersOrGetters("set", GraphicsCard.class);
         createInstance(labels, inputs, settersMap, typesMap, graphicsCard);
         return graphicsCard;

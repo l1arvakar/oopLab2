@@ -6,7 +6,8 @@ import com.example.oopLab2.factories.serializers.JSONSerializerFactory;
 import com.example.oopLab2.factories.serializers.SerializerFactory;
 import com.example.oopLab2.factories.serializers.TextSerializerFactory;
 import com.example.oopLab2.hierarchy.*;
-import com.example.oopLab2.tools.FileChooser;
+import com.example.oopLab2.serialize.Serializer;
+import com.example.oopLab2.tools.CustomFileChooser;
 import com.example.oopLab2.tools.GUI;
 import com.example.oopLab2.tools.Maps;
 import com.example.oopLab2.tools.TableObject;
@@ -20,20 +21,31 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
+import org.example.Plugin;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Optional;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.*;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+
 
 public class HelloController {
 
     private final HashMap<String, MainFactory> mapOfFactories = new HashMap<>();
     private final ObservableList<com.example.oopLab2.tools.TableObject> tableObjects = FXCollections.observableArrayList();
     private ArrayList<PCComponent> components = new ArrayList<>();
-
     private final HashMap<String, SerializerFactory> mapOfSerializers = new HashMap<>();
+    private static HashMap<String, Plugin> plugins = new HashMap<>();
 
     private ArrayList<Control> inputs;
     private TableObject selectedRow;
@@ -83,6 +95,14 @@ public class HelloController {
 
     @FXML
     private Button DeleteBtn;
+    @FXML
+    private ChoiceBox<String> pluginChoice;
+    @FXML
+    private Pane pluginPane;
+    @FXML
+    private Button btnConfirm;
+    @FXML
+    private Button btnCancel;
 
 
     ArrayList<Label> getLabels() {
@@ -163,14 +183,38 @@ public class HelloController {
         initSerializers();
         initGUI();
         initObjects();
+        initPlugins();
     }
 
-    private void initSerializers() {
-        mapOfSerializers.put("bin", new BinarySerializerFactory());
-        mapOfSerializers.put("json", new JSONSerializerFactory());
-        mapOfSerializers.put("txt", new TextSerializerFactory());
-    }
+    private void initPlugins() {
+        String path = "src/main/java/com/example/oopLab2/plugins";
+        File dir = new File(path);
+        for(File file : dir.listFiles()) {
+            try {
+                String pathToJar = file.getPath();
+                JarFile jarFile = new JarFile(pathToJar);
+                Enumeration<JarEntry> entry = jarFile.entries();
 
+                URL[] urls = {new URL("jar:file:" + pathToJar + "!/")};
+                URLClassLoader cl = URLClassLoader.newInstance(urls);
+
+                while (entry.hasMoreElements()) {
+                    JarEntry jarEntry = entry.nextElement();
+                    if (jarEntry.isDirectory() || !jarEntry.getName().endsWith(".class")) {
+                        continue;
+                    }
+                    String className = jarEntry.getName().substring(0, jarEntry.getName().length() - 6);
+                    className = className.replace('/', '.');
+                    Plugin plugin = (Plugin) cl.loadClass(className).getConstructor().newInstance();
+                    plugins.put(plugin.getName(), plugin);
+                }
+            } catch (Exception e) {
+                new Alert(Alert.AlertType.ERROR, "Не удалось загрузить плагины").showAndWait();
+                e.printStackTrace(); // Вывод стека вызова исключения
+            }
+        }
+
+    }
 
     public void onInstanceSelected(MouseEvent event) {
         if (event.getClickCount() == 1) {
@@ -235,6 +279,12 @@ public class HelloController {
         mapOfFactories.put("Webcam", new WebcamFactory());
     }
 
+    private void initSerializers() {
+        mapOfSerializers.put(".bin", new BinarySerializerFactory());
+        mapOfSerializers.put(".json", new JSONSerializerFactory());
+        mapOfSerializers.put(".txt", new TextSerializerFactory());
+    }
+
     public void onMenuClick() {
         selectedRow = null;
         UpdateBtn.setDisable(true);
@@ -242,14 +292,71 @@ public class HelloController {
     }
 
     public void onFileOpenClick() throws JsonProcessingException {
-        deserialize();
+        try {
+            FileChooser chooser = new FileChooser();
+            List<String> extensions = new ArrayList<>();
+            for (String extension : mapOfSerializers.keySet()) {
+                String info = mapOfSerializers.get(extension).getSerializer().getExtension() + "(*" + extension;
+                extensions.clear();
+                extensions.add("*" + extension);
+                for(String name : plugins.keySet()) {
+                    extensions.add("*" + extension + plugins.get(name).getExtension());
+                    info = info + ", *" + plugins.get(name).getExtension();
+                }
+                info = info + ")";
+                chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(
+                        info, extensions));
+                extensions.remove("*" + extension);
+            }
+
+            File file = chooser.showOpenDialog(HelloApplication.stStage);
+            if(file != null) {
+                byte[] data = null;
+                String extension = file.getName().substring(file.getName().lastIndexOf("."));
+                byte[] bytes = Files.readAllBytes(file.toPath());
+                if(isEncoded(file.getName())) {
+                    data = decript(bytes, file);
+                    extension = file.getName().substring(0, file.getName().lastIndexOf("."));
+                    extension = extension.substring(extension.lastIndexOf("."));
+                } else {
+                    data = bytes;
+                }
+                SerializerFactory serializerFactory = mapOfSerializers.get(extension);
+
+                components = mapOfSerializers.get(extension).getSerializer().deserialize(data);
+                tableObjects.clear();
+                for (int i = 0; i < components.size(); i++) {
+                    tableObjects.add(new TableObject(i + 1, components.get(i).getClass().getSimpleName(), components.get(i).getBrand(), components.get(i).getPrice(), components.get(i).getConnectionType()));
+                }
+//                if(isEncoded(file.getName())) {
+//                    FileOutputStream stream = new FileOutputStream(file);
+//                    stream.write(data);
+//                    stream.close();
+//                }
+            }
+        } catch (Exception e){
+            System.out.println("file not found");
+        }
+//        deserialize();
     }
 
-    private void deserialize() throws JsonProcessingException {
-        selectedFile = FileChooser.getOpenFile();
+    private byte[] decript(byte[] bytes, File file) {
+            Plugin plugin = null;
+            for(String name : plugins.keySet()) {
+                if(plugins.get(name).getExtension().equals(file.getName().substring(file.getName().lastIndexOf(".")))){
+                    plugin = plugins.get(name);
+                    break;
+                }
+            }
+            return plugin.decrypt(bytes);
+    }
+
+    private void deserialize() throws IOException {
+        selectedFile = CustomFileChooser.getOpenFile();
         if (selectedFile != null) {
             String ext = getExtension(selectedFile.getPath());
-            components = mapOfSerializers.get(ext).getSerializer().deserialize(selectedFile.getPath());
+            byte[] bytes = Files.readAllBytes(selectedFile.toPath());
+            components = mapOfSerializers.get(ext).getSerializer().deserialize(bytes);
 
             tableObjects.clear();
             for (int i = 0; i < components.size(); i++) {
@@ -264,14 +371,108 @@ public class HelloController {
     }
 
     public void onFileSaveClick() {
-        serialize();
+        showPluginPane();
+    }
+
+    private void showPluginPane() {
+        pluginChoice.getItems().clear();
+        pluginChoice.getItems().add("None");
+        pluginChoice.setValue("None");
+        for(String plugin : plugins.keySet()) {
+            pluginChoice.getItems().add(plugin);
+        }
+        pluginPane.setVisible(true);
     }
 
     private void serialize() {
-        selectedFile = FileChooser.getSaveFile();
+        selectedFile = CustomFileChooser.getSaveFile();
+        byte[] bytes = null;
         if (selectedFile != null) {
             String ext = getExtension(selectedFile.getPath());
-            mapOfSerializers.get(ext).getSerializer().serialize(components, selectedFile.getPath());
+            bytes = mapOfSerializers.get(ext).getSerializer().serialize(components);
         }
+        try (FileOutputStream fos = new FileOutputStream(selectedFile)) {
+            fos.write(bytes);
+        } catch (IOException e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("Error while saving bytes to file");
+            alert.setContentText("Check file info.");
+            alert.showAndWait();
+        }
+    }
+
+    public void onConfirm(MouseEvent event) {
+        try {
+            FileChooser chooser = new FileChooser();
+            for(String extension : mapOfSerializers.keySet()) {
+                String extensions = "*" + extension;
+                String info = mapOfSerializers.get(extension).getSerializer().getExtension() + "(*" + extension;
+                if(!pluginChoice.getValue().equals("None")) {
+                    extensions = extensions + plugins.get(pluginChoice.getValue()).getExtension();
+                    info = info + plugins.get(pluginChoice.getValue()).getExtension();
+                }
+                info = info + ")";
+                chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(
+                        mapOfSerializers.get(extension).getSerializer().getExtension(), extensions));
+            }
+            File file = chooser.showOpenDialog(HelloApplication.stStage);
+            if(file != null) {
+                String extension = file.getName().substring(file.getName().lastIndexOf("."));
+                if(isEncoded(file.getName())) {
+                    extension = file.getName().substring(0, file.getName().lastIndexOf("."));
+                    extension = extension.substring(extension.lastIndexOf("."));
+                }
+                SerializerFactory serializerFactory = mapOfSerializers.get(extension);
+                byte[] bytes = serializerFactory.getSerializer().serialize(components);
+                Serializer serializer = serializerFactory.getSerializer();
+                char[] charArray = new String(bytes, StandardCharsets.UTF_8).toCharArray(); //// to delete
+                if(!pluginChoice.getValue().equals("None")) {
+                    encrypt(bytes, file);
+                } else {
+                    try (FileOutputStream fos = new FileOutputStream(file)) {
+                        fos.write(bytes);
+                        fos.close();
+                    } catch (IOException e) {
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Error");
+                        alert.setHeaderText("Error while saving bytes to file");
+                        alert.setContentText("Check file info.");
+                        alert.showAndWait();
+                    }
+                }
+                hidePluginPane();
+            }
+        } catch (Exception e) {
+            System.out.println("file not found");
+        }
+//        serialize();
+    }
+
+    private void encrypt(byte[] bytes, File file) {
+        try {
+            byte[] data = plugins.get(pluginChoice.getValue()).encrypt(bytes);
+
+            FileOutputStream output = new FileOutputStream(file);
+            output.write(data);
+            output.close();
+        } catch (FileNotFoundException e) {
+            new Alert(Alert.AlertType.ERROR, "Не удалось применить плагин").showAndWait();
+        } catch (IOException e) {
+            new Alert(Alert.AlertType.ERROR, "Не удалось применить плагин").showAndWait();
+        }
+    }
+
+    private boolean isEncoded(String name) {
+        for(String plugin : plugins.keySet()){
+            String plugExt = plugins.get(plugin).getExtension();
+            String nameExt = name.substring(name.lastIndexOf("."));
+            if(plugExt.equals(nameExt)) return true;
+        }
+        return false;
+    }
+
+    public void hidePluginPane() {
+        pluginPane.setVisible(false);
     }
 }

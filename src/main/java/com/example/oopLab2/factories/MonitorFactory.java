@@ -38,7 +38,7 @@ public class MonitorFactory implements MainFactory {
     @Override
     public PCComponent getComponent() {
         Monitor monitor = new Monitor();
-        HashMap<String,String> typesMap = Maps.getMapOfTypes(Monitor.class);
+        HashMap<String,Class<?>> typesMap = Maps.getMapOfTypes(Monitor.class);
         HashMap<String,Method> settersMap = Maps.getMapOfSettersOrGetters("set", Monitor.class);
         createInstance(labels, inputs, settersMap, typesMap, monitor);
         return monitor;

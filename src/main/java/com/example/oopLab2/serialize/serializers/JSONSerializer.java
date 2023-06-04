@@ -9,11 +9,10 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.typeadapters.RuntimeTypeAdapterFactory;
 import javafx.scene.control.Alert;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -44,24 +43,15 @@ public class JSONSerializer implements Serializer {
     }
 
     @Override
-    public void serialize(ArrayList<PCComponent> components, String path) {
-        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(path))) {
+    public byte[] serialize(ArrayList<PCComponent> components) {
             String json = gson.toJson(components, collectionType);
-            bufferedWriter.write(json);
-        } catch (Exception e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error");
-            alert.setHeaderText("Error while JSON serialization");
-            alert.setContentText("Check file info.");
-            alert.showAndWait();
-        }
+            return json.getBytes();
     }
 
     @Override
-    public ArrayList<PCComponent> deserialize(String path) throws JsonProcessingException {
+    public ArrayList<PCComponent> deserialize(byte[] bytes) throws JsonProcessingException {
         try {
-            byte[] bytes = readFile(new File(path));
-            String json = new String(bytes) ;
+            String json = new String(bytes);
             return gson.fromJson(json, collectionType);
         } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);

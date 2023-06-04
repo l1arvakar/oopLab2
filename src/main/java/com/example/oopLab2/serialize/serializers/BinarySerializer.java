@@ -19,10 +19,16 @@ public class BinarySerializer implements Serializer {
     }
 
     @Override
-    public void serialize(ArrayList<PCComponent> components, String path) {
+    public byte[] serialize(ArrayList<PCComponent> components) {
         try {
-            ObjectOutputStream stream = new ObjectOutputStream(new FileOutputStream(path));
-            stream.writeObject(components);
+            ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+            ObjectOutputStream objectStream = new ObjectOutputStream(byteStream);
+
+            objectStream.writeObject(components);
+            objectStream.close();
+
+            byte[] byteArray = byteStream.toByteArray();
+            return byteArray;
         } catch (IOException e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
@@ -30,13 +36,15 @@ public class BinarySerializer implements Serializer {
             alert.setContentText("Check file info.");
             alert.showAndWait();
         }
+        return new byte[0];
     }
 
     @Override
-    public ArrayList<PCComponent> deserialize(String path) {
+    public ArrayList<PCComponent> deserialize(byte[] bytes) {
         ArrayList<PCComponent> newArray = new ArrayList<>();
-        try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(path))){
-            newArray = (ArrayList<PCComponent>) inputStream.readObject();
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(bytes);){
+            ObjectInputStream objectInputStream = new ObjectInputStream(bais);
+            return (ArrayList<PCComponent>) objectInputStream.readObject();
         } catch (IOException | ClassNotFoundException e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");

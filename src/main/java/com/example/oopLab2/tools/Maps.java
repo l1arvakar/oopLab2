@@ -18,11 +18,11 @@ public class Maps {
         return map;
     }
 
-    public static HashMap<String, String> getMapOfTypes(Class thisClass) {
-        HashMap<String, String> mapOfTypes = new HashMap<>();
+    public static HashMap<String, Class<?>> getMapOfTypes(Class thisClass) {
+        HashMap<String, Class<?>> mapOfTypes = new HashMap<>();
         for (Method method : Arrays.stream(thisClass.getMethods()).filter(x -> x.getName().startsWith("get")).toList()) {
             if (method.isAnnotationPresent(Type.class) && method.isAnnotationPresent(Name.class)) {
-                mapOfTypes.put(method.getAnnotation(Name.class).value(), method.getAnnotation(Type.class).value());
+                mapOfTypes.put(method.getAnnotation(Name.class).value(), method.getReturnType());
             }
         }
         return mapOfTypes;

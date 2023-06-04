@@ -38,7 +38,7 @@ public class HeadphonesFactory implements MainFactory {
     @Override
     public PCComponent getComponent() {
         Headphones headphones = new Headphones();
-        HashMap<String, String> typesMap = Maps.getMapOfTypes(Headphones.class);
+        HashMap<String, Class<?>> typesMap = Maps.getMapOfTypes(Headphones.class);
         HashMap<String, Method> settersMap = Maps.getMapOfSettersOrGetters("set", Headphones.class);
         createInstance(labels, inputs, settersMap, typesMap, headphones);
         return headphones;

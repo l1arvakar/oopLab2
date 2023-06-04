@@ -51,33 +51,34 @@ public class Check {
     }
 
     public static boolean checkInputs(ArrayList<Control> inputs, ArrayList<String> labelsTexts, Class thisClass) {
-        HashMap<String, String> map = Maps.getMapOfTypes(thisClass);
+        HashMap<String, Class<?>> map = Maps.getMapOfTypes(thisClass);
         boolean[] isCorrects = new boolean[map.size() + 1];
         for (int i = 0; i < map.size(); i++) {
             isCorrects[i] = true;
         }
         for (int i = 0; i < labelsTexts.size(); i++) {
-            switch (map.get(labelsTexts.get(i))) {
-                case "String" -> isCorrects[i] = checkStringValue((TextField) inputs.get(i));
-                case "Integer" -> {
-                    switch (labelsTexts.get(i)) {
-                        case "Number of cores" -> isCorrects[i] = checkIntegerValue((TextField) inputs.get(i), 1, 256);
-                        case "Gpu memory size(GB)" -> isCorrects[i] = checkIntegerValue((TextField) inputs.get(i), 1, 100);
-                        case "Max volume(dB)" -> isCorrects[i] = checkIntegerValue((TextField) inputs.get(i), 40, 140);
-                        case "Brightness (cd/m2)" -> isCorrects[i] = checkIntegerValue((TextField) inputs.get(i), 1, 600);
-                        case "Price($)" -> isCorrects[i] = checkIntegerValue((TextField) inputs.get(i), 1, 100000);
-                        case "Height", "Length", "Width" -> isCorrects[i] = checkIntegerValue((TextField) inputs.get(i), 1, 50);
-                        case "Frame rate(FPS)" -> isCorrects[i] = checkIntegerValue((TextField) inputs.get(i), 15, 390);
-                    }
+            Class<?> aClass = map.get(labelsTexts.get(i));
+            if (aClass.getSimpleName().equals("String")) {
+                isCorrects[i] = checkStringValue((TextField) inputs.get(i));
+            } else if (aClass.getSimpleName().equals("int")) {
+                switch (labelsTexts.get(i)) {
+                    case "Number of cores" -> isCorrects[i] = checkIntegerValue((TextField) inputs.get(i), 1, 256);
+                    case "Gpu memory size(GB)" -> isCorrects[i] = checkIntegerValue((TextField) inputs.get(i), 1, 100);
+                    case "Max volume(dB)" -> isCorrects[i] = checkIntegerValue((TextField) inputs.get(i), 40, 140);
+                    case "Brightness (cd/m2)" -> isCorrects[i] = checkIntegerValue((TextField) inputs.get(i), 1, 600);
+                    case "Price($)" -> isCorrects[i] = checkIntegerValue((TextField) inputs.get(i), 1, 100000);
+                    case "Height", "Length", "Width" ->
+                            isCorrects[i] = checkIntegerValue((TextField) inputs.get(i), 1, 50);
+                    case "Frame rate(FPS)" -> isCorrects[i] = checkIntegerValue((TextField) inputs.get(i), 15, 390);
                 }
-                    case "Double" -> {
-                        switch (labelsTexts.get(i)) {
-                            case "Clock speed" -> isCorrects[i] = checkDoubleValue((TextField) inputs.get(i), 0.1, 100.0);
-                            case "Screen size" -> isCorrects[i] = checkDoubleValue((TextField) inputs.get(i), 10.0, 60.0);
-                            case "Matrix resolution(Mp)" -> isCorrects[i] = checkDoubleValue((TextField) inputs.get(i), 1.00, 33.0);
-                        }
-                    }
+            } else if (aClass.getSimpleName().equals("double")) {
+                switch (labelsTexts.get(i)) {
+                    case "Clock speed" -> isCorrects[i] = checkDoubleValue((TextField) inputs.get(i), 0.1, 100.0);
+                    case "Screen size" -> isCorrects[i] = checkDoubleValue((TextField) inputs.get(i), 10.0, 60.0);
+                    case "Matrix resolution(Mp)" ->
+                            isCorrects[i] = checkDoubleValue((TextField) inputs.get(i), 1.00, 33.0);
                 }
+            }
             }
 
 

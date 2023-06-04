@@ -16,7 +16,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Objects;
 
 public class GUI {
     private static void renameLabels(VBox LabelsVBox, ArrayList<String> labelTexts) {
@@ -26,7 +25,7 @@ public class GUI {
         }
     }
 
-    public static ArrayList<Control> createLabelsAndInputs(HBox container, ArrayList<String> labelTexts, HashMap<String,String> typesMap, Class thisClass) {
+    public static ArrayList<Control> createLabelsAndInputs(HBox container, ArrayList<String> labelTexts, HashMap<String,Class<?>> typesMap, Class thisClass) {
         ArrayList<Control> inputs = new ArrayList<>();
         VBox LabelsVBox = (VBox) container.getChildren().get(0);
         VBox InputsVBox = (VBox) container.getChildren().get(1);
@@ -37,7 +36,7 @@ public class GUI {
         int i = 0;
         while (i < labelTexts.size()) {
             Label label = new Label();
-            if (Objects.equals(typesMap.get(labelTexts.get(i)), "Enum")) {
+            if (typesMap.get(labelTexts.get(i)).isEnum()) {
                 ComboBox comboBox = new ComboBox();
                 Class<? extends Enum> enumClass = getEnumClass(thisClass);
                 for (Enum<?> value : enumClass.getEnumConstants()) {
@@ -96,9 +95,9 @@ public class GUI {
         return null;
     }
 
-    public static void clearInputs(ArrayList<Control> inputs, ArrayList<Label> labels, HashMap<String,String> typesMap, Class thisClass) {
+    public static void clearInputs(ArrayList<Control> inputs, ArrayList<Label> labels, HashMap<String,Class<?>> typesMap, Class thisClass) {
         for (int i = 0; i < inputs.size(); i++) {
-            if (Objects.equals(typesMap.get(labels.get(i).getText()), "Enum")) {
+            if (typesMap.get(labels.get(i).getText()).isEnum()) {
                 ComboBox comboBox = (ComboBox) inputs.get(i);
                 Class<? extends Enum> enumClass = getEnumClass(thisClass);
                 comboBox.setValue(getAnnotationValue(enumClass.getEnumConstants()[0]));

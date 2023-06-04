@@ -5,10 +5,10 @@ module com.example.oopLab {
     requires com.fasterxml.jackson.core;
     requires com.fasterxml.jackson.databind;
     requires gson.extras;
-    requires junit;
-    requires hamcrest.core;
 
+    requires plugin;
 
+    requires org.bouncycastle.provider;
     opens com.example.oopLab2 to javafx.fxml;
     exports com.example.oopLab2;
     exports com.example.oopLab2.tools;
@@ -20,6 +20,5 @@ module com.example.oopLab {
     exports com.example.oopLab2.factories;
     opens com.example.oopLab2.factories to javafx.fxml;
 
-    exports com.example.oopLab2.tests;
 
 }

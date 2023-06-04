@@ -6,12 +6,15 @@ import com.example.oopLab2.serialize.Serializer;
 import com.example.oopLab2.tools.Maps;
 import javafx.scene.control.Alert;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class TextSerializer implements Serializer {
     private final String CLASS_NAME_PREFIX = "com.example.oopLab2.hierarchy.";
@@ -27,25 +30,28 @@ public class TextSerializer implements Serializer {
     }
 
     @Override
-    public void serialize(ArrayList<PCComponent> components, String path) {
-        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(path))) {
+    public byte[] serialize(ArrayList<PCComponent> components) {
+        StringBuilder stringBuilder = new StringBuilder();
+        try {
             for (PCComponent gadget : components) {
                 String fullClassName = gadget.getClass().getSimpleName();
-                bufferedWriter.write("Class:" + fullClassName + ";");
+                stringBuilder.append("Class:" + fullClassName + ";");
                 HashMap<String, Method> map = Maps.getMapOfSettersOrGetters("get", gadget.getClass());
                 for (String key : map.keySet()) {
-                    String returnType = map.get(key).getReturnType().getSimpleName();
-                    if (returnType.equals("int") || returnType.equals("boolean") || returnType.equals("double") || returnType.equals("OutputInformationType") || returnType.equals("InputInformationType")) {
+                    Class<?> returnType = map.get(key).getReturnType();
+                    String simpleName = returnType.getSimpleName();
+                    if (returnType.isEnum() || simpleName.equals("int") || simpleName.equals("boolean") || simpleName.equals("double")) {
                         String value = String.valueOf(map.get(key).invoke(gadget));
-                        bufferedWriter.write(key + ":" + value + ";");
-                    } else if (returnType.equals("String")) {
+                        stringBuilder.append(key + ":" + value + ";");
+                    } else if (simpleName.equals("String")) {
                         String value = String.valueOf(map.get(key).invoke(gadget));
                         value = escaping(value);
-                        bufferedWriter.write(key + ":" + value + ";");
+                        stringBuilder.append(key + ":" + value + ";");
                     }
                 }
-                bufferedWriter.write("\n");
+                stringBuilder.append("\n");
             }
+            return stringBuilder.toString().getBytes();
         } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
@@ -53,18 +59,32 @@ public class TextSerializer implements Serializer {
             alert.setContentText("Check file info.");
             alert.showAndWait();
         }
+        return null;
     }
 
     @Override
-    public ArrayList<PCComponent> deserialize(String path) {
+    public ArrayList<PCComponent> deserialize(byte[] bytes) {
         ArrayList<PCComponent> components = new ArrayList<>();
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(path))) {
-            String str = bufferedReader.readLine();
+        List<String> stringList = new ArrayList<>();
+        StringBuilder stringBuilder = new StringBuilder();
+        for (byte b : bytes) {
+            char c = (char) b;
+            if (c == '\n') {
+                stringList.add(stringBuilder.toString());
+                stringBuilder.setLength(0);  // Очищаем StringBuilder для следующей строки
+            } else {
+                stringBuilder.append(c);
+            }
+        }
+        if (stringBuilder.length() > 0) {
+            stringList.add(stringBuilder.toString());
+        }
+        try {
             String className;
             Object instance;
             HashMap<String, Method> map;
-            HashMap<String, String> mapOfTypes;
-            while (str != null) {
+            HashMap<String, Class<?>> mapOfTypes;
+            for (String str: stringList) {
                 str = str.trim();
                 HashMap<String, String> valuesMap = strToMap(str);
                 className = valuesMap.get("Class");
@@ -75,23 +95,23 @@ public class TextSerializer implements Serializer {
                 for (String field: valuesMap.keySet()) {
                     String value = valuesMap.get(field);
                     if (mapOfTypes.containsKey(field)) {
-                        switch (mapOfTypes.get(field)) {
-                            case "Integer" -> map.get(field).invoke(instance, Integer.parseInt(value));
-                            case "String" -> {
-                                value = removeBackSlash(value);
-                                map.get(field).invoke(instance, value);
-                            }
-                            case "Boolean" -> map.get(field).invoke(instance, Boolean.parseBoolean(value));
-                            case "Double" -> map.get(field).invoke(instance, Double.parseDouble(value));
-                            case "Enum" -> {
-                                Class<? extends Enum> enumClass = getEnumClass(instance.getClass());
-                                map.get(field).invoke(instance, Enum.valueOf(enumClass, value));
-                            }
+                        Class<? extends Enum> aClass = (Class<? extends Enum>) mapOfTypes.get(field);
+                        String name = aClass.getSimpleName();
+                        if (name.equals("int")) {
+                            map.get(field).invoke(instance, Integer.parseInt(value));
+                        } else if (name.equals("String")) {
+                            value = removeBackSlash(value);
+                            map.get(field).invoke(instance, value);
+                        } else if (name.equals("boolean")) {
+                            map.get(field).invoke(instance, Boolean.parseBoolean(value));
+                        } else if (name.equals("double")) {
+                            map.get(field).invoke(instance, Double.parseDouble(value));
+                        } else if (aClass.isEnum()) {
+                            map.get(field).invoke(instance, Enum.valueOf( aClass, value));
                         }
                     }
                 }
                 components.add((PCComponent) instance);
-                str = bufferedReader.readLine();
             }
         } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);

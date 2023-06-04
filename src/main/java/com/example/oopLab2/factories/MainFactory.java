@@ -18,23 +18,18 @@ import java.util.HashMap;
 
 public interface MainFactory {
     default void createInstance(ArrayList<String> labelTexts, ArrayList<Control> inputs, HashMap<String,
-            Method> mapOfSetters, HashMap<String, String> mapOfTypes, PCComponent instance) {
+            Method> mapOfSetters, HashMap<String, Class<?>> mapOfTypes, PCComponent instance) {
         for (int i = 0; i < labelTexts.size(); i++) {
             try {
-                switch (mapOfTypes.get(labelTexts.get(i))) {
-                    case "String":
-                        mapOfSetters.get(labelTexts.get(i)).invoke(instance, ((TextField) inputs.get(i)).getText());
-                        break;
-                    case "Integer":
-                        mapOfSetters.get(labelTexts.get(i)).invoke(instance, Integer.parseInt(((TextField) inputs.get(i)).getText()));
-                        break;
-                    case "Double":
-                        mapOfSetters.get(labelTexts.get(i)).invoke(instance, Double.parseDouble(((TextField) inputs.get(i)).getText()));
-                        break;
-                    case "Enum":
-                        Class<? extends Enum> enumClass = getEnumClass(instance.getClass());
-                        mapOfSetters.get(labelTexts.get(i)).invoke(instance, getEnumByAnnotationValue(enumClass, (String) ((ComboBox<?>) inputs.get(i)).getValue()));
-
+                Class<?> aClass = mapOfTypes.get(labelTexts.get(i));
+                if (aClass.getSimpleName().equals("String")) {
+                    mapOfSetters.get(labelTexts.get(i)).invoke(instance, ((TextField) inputs.get(i)).getText());
+                } else if (aClass.getSimpleName().equals("int")) {
+                    mapOfSetters.get(labelTexts.get(i)).invoke(instance, Integer.parseInt(((TextField) inputs.get(i)).getText()));
+                } else if (aClass.getSimpleName().equals("double")) {
+                    mapOfSetters.get(labelTexts.get(i)).invoke(instance, Double.parseDouble(((TextField) inputs.get(i)).getText()));
+                } else if (aClass.isEnum()) {
+                    mapOfSetters.get(labelTexts.get(i)).invoke(instance, getEnumByAnnotationValue(mapOfTypes.get(labelTexts.get(i)), (String) ((ComboBox<?>) inputs.get(i)).getValue()));
                 }
             } catch (InvocationTargetException | IllegalAccessException e) {
                 throw new RuntimeException(e);
@@ -66,8 +61,8 @@ public interface MainFactory {
         }
     }
 
-    private static <T extends Enum<T>> T getEnumByAnnotationValue(Class<T> enumClass, String annotationValue) {
-        T[] enumValues = enumClass.getEnumConstants();
+    private static <T extends Enum<T>> T getEnumByAnnotationValue(Class<?> enumClass, String annotationValue) {
+        T[] enumValues = (T[]) enumClass.getEnumConstants();
         for (T enumValue : enumValues) {
             String value = getAnnotationValue(enumValue);
             if (annotationValue.equals(value)) {
